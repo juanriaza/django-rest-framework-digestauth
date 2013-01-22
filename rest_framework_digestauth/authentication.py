@@ -2,7 +2,7 @@ import os
 import hashlib
 from rest_framework import exceptions
 from rest_framework.compat import User
-from rest_framework.authentication import BaseAuthentication
+from rest_framework.authentication import BaseAuthentication, TokenAuthentication
 
 from rest_framework_digestauth.utils import parse_dict_header
 
@@ -20,19 +20,16 @@ class DigestAuthentication(BaseAuthentication):
     algorithm = 'MD5' # 'MD5'/'SHA'/'MD5-sess'
     # quality of protection
     qop = 'auth' # 'auth'/'auth-int'/None
-    opaque = None
+    opaque = 'TESTING'
+    token_model = TokenAuthentication.model
 
     def authenticate(self, request):
-        if not self.opaque:
-            self.opaque = os.urandom(10)
-
         if 'HTTP_AUTHORIZATION' in request.META:
-            # TODO: choose one of the implementations
             self.parse_authorization_header(request.META['HTTP_AUTHORIZATION'])
             self.check_authorization_request_header()
 
             user = self.get_user()
-            password = user.password
+            password = self.get_api_key(user)
             if self.check_digest_auth(request, password):
                 return (None, user, None)
 
@@ -40,18 +37,10 @@ class DigestAuthentication(BaseAuthentication):
         """
         Builds the WWW-Authenticate response header
         """
-        # TODO: choose one of the implementations
-        # http://pretty-rfc.herokuapp.com/RFC2617#the.www-authenticate.response.header
         nonce_data = '%s:%s' % (self.realm, os.urandom(8))
-        # nonce_data = '%s:%s:%s' % (request.META.get('REMOTE_ADDR'), time.time(), os.urandom(10)))
-        # nonce_data = "%s:%s" % (time.time(), self.realm)
         nonce = self.hash_func(nonce_data)
 
-        # TODO: check stale flag
-        # A flag, indicating that the previous request from
-        # the client was rejected because the nonce value was stale.
-
-        header_format = 'Digest realm="%(realm)s", qop="%(qop)s", nonce="%(nonce)s", opaque="%(opaque)s"'
+        header_format = 'Digest realm="%(realm)s", qop="%(qop)s", nonce="%(nonce)s", opaque="%(opaque)s", algorithm="%(algorithm)s"'
         header_values = {
             'realm' : self.realm,
             'qop' : self.qop,
@@ -97,9 +86,16 @@ class DigestAuthentication(BaseAuthentication):
         username = self.auth_header['username']
         try:
             user = User.objects.get(username=username)
-        except User.DoesNotExist:
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
             raise exceptions.PermissionDenied
         return user
+
+    def get_token(self, user):
+        try:
+            token_inst = self.token_model.objects.get(user=user)
+        except (self.token_model.DoesNotExist, self.token_model.MultipleObjectsReturned):
+            raise exceptions.PermissionDenied
+        return token_inst.key
 
     def check_digest_auth(self, request, password):
         """

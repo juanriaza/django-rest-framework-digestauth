@@ -1,0 +1,2 @@
+HTTP Digest requires the server to be able to calculate a hash over the user's username, password, and your realm.
+Since django.contrib.auth` only stores a hash of the user's password, this cannot be used to authenticate HTTP Digest sessions.
