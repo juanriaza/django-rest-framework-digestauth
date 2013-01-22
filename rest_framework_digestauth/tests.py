@@ -1,3 +1,7 @@
+import os
+import time
+import hashlib
+
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 
@@ -6,11 +10,52 @@ from rest_framework.authtoken.models import Token
 from rest_framework.compat import patterns
 
 from rest_framework_digestauth.authentication import DigestAuthentication
+from rest_framework_digestauth.utils import parse_dict_header
 
 
 urlpatterns = patterns('',
     (r'^digest-auth/$', MockView.as_view(authentication_classes=[DigestAuthentication])),
 )
+
+def build_digest_header(username, password, challenge_header, method, path):
+    challenge_data = parse_dict_header(challenge_header.replace('Digest ', ''))
+    realm = challenge_data['realm']
+    nonce = challenge_data['nonce']
+    qop = challenge_data['qop']
+    opaque = challenge_data['opaque']
+
+    def md5_utf8(x):
+        if isinstance(x, str):
+            x = x.encode('utf-8')
+        return hashlib.md5(x).hexdigest()
+    hash_utf8 = md5_utf8
+
+    KD = lambda s, d: hash_utf8("%s:%s" % (s, d))
+
+    A1 = '%s:%s:%s' % (username, realm, password)
+    A2 = '%s:%s' % (method, path)
+
+    nonce_count = 1
+
+    ncvalue = '%08x' % nonce_count
+    s = str(nonce_count).encode('utf-8')
+    s += nonce.encode('utf-8')
+    s += time.ctime().encode('utf-8')
+    s += os.urandom(8)
+
+    cnonce = (hashlib.sha1(s).hexdigest()[:16])
+    noncebit = "%s:%s:%s:%s:%s" % (nonce, ncvalue, cnonce, qop, hash_utf8(A2))
+    respdig = KD(hash_utf8(A1), noncebit)
+
+
+    base = 'username="%s", realm="%s", nonce="%s", uri="%s", '\
+           'response="%s", algorithm="MD5"' % (username, realm, nonce, path, respdig)
+    if opaque:
+        base += ', opaque="%s"' % opaque
+    if qop:
+        base += ', qop=auth, nc=%s, cnonce="%s"' % (ncvalue, cnonce)
+    return 'Digest %s' % base
+
 
 class DigestAuthTests(TestCase):
     """Digest Authentication"""
@@ -30,3 +75,11 @@ class DigestAuthTests(TestCase):
         response = self.csrf_client.post('/digest-auth/', {'example': 'example'})
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response)
+
+    def test_access(self):
+        response = self.csrf_client.post('/digest-auth/', {'example': 'example'})
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response)
+        auth = build_digest_header('john', 'abcd1234', response['WWW-Authenticate'], 'POST', '/digest-auth/')
+        response = self.csrf_client.post('/digest-auth/', {'example': 'example'}, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)

@@ -27,11 +27,10 @@ class DigestAuthentication(BaseAuthentication):
         if 'HTTP_AUTHORIZATION' in request.META:
             self.parse_authorization_header(request.META['HTTP_AUTHORIZATION'])
             self.check_authorization_request_header()
-
             user = self.get_user()
-            password = self.get_api_key(user)
+            password = self.get_token(user)
             if self.check_digest_auth(request, password):
-                return (None, user, None)
+                return user, None
 
     def authenticate_header(self, request):
         """
