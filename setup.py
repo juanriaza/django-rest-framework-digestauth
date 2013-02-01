@@ -42,7 +42,8 @@ def get_package_data(package):
     return {package: filepaths}
 
 
-version = get_version('rest_framework_digestauth')
+package = 'rest_framework_digestauth'
+version = get_version(package)
 
 
 if sys.argv[-1] == 'publish':
@@ -62,8 +63,8 @@ setup(
     description='Digest HTTP auth support for Django REST framework',
     author='Juan Riaza',
     author_email='juanriaza@gmail.com',
-    packages=get_packages('rest_framework_digestauth'),
-    package_data=get_package_data('rest_framework_digestauth'),
+    packages=get_packages(package),
+    package_data=get_package_data(package),
     install_requires=open('requirements.txt').read().split('\n'),
     classifiers=[
         'Development Status :: 4 - Beta',
