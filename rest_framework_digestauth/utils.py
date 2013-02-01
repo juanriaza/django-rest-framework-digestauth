@@ -12,7 +12,7 @@ is_py3 = (_ver[0] == 3)
 if is_py2:
     from urllib2 import parse_http_list as _parse_list_header
 elif is_py3:
-    from urllib.request import parse_http_list as _parse_list_header
+    from urllib.request import parse_http_list as _parse_list_header  # NOQA
 
 
 # From mitsuhiko/werkzeug (used with permission).
@@ -47,6 +47,7 @@ def parse_dict_header(value):
             value = unquote_header_value(value[1:-1])
         result[name] = value
     return result
+
 
 # From mitsuhiko/werkzeug (used with permission).
 def unquote_header_value(value, is_filename=False):

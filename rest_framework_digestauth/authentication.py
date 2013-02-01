@@ -2,7 +2,8 @@ import os
 import hashlib
 from rest_framework import exceptions
 from rest_framework.compat import User
-from rest_framework.authentication import BaseAuthentication, TokenAuthentication
+from rest_framework.authentication import BaseAuthentication,\
+    TokenAuthentication
 
 from rest_framework_digestauth.utils import parse_dict_header
 
@@ -17,9 +18,10 @@ class DigestAuthentication(BaseAuthentication):
         'MD5': hashlib.md5,
         'MD5-sess': hashlib.md5,
         'SHA': hashlib.sha1}
-    algorithm = 'MD5' # 'MD5'/'SHA'/'MD5-sess'
+    algorithm = 'MD5'  # 'MD5'/'SHA'/'MD5-sess'
     # quality of protection
-    qop = 'auth' # 'auth'/'auth-int'/None
+    qop = 'auth'  # 'auth'/'auth-int'/None
+    # TODO: change opaque
     opaque = 'TESTING'
     token_model = TokenAuthentication.model
 
@@ -39,13 +41,15 @@ class DigestAuthentication(BaseAuthentication):
         nonce_data = '%s:%s' % (self.realm, os.urandom(8))
         nonce = self.hash_func(nonce_data)
 
-        header_format = 'Digest realm="%(realm)s", qop="%(qop)s", nonce="%(nonce)s", opaque="%(opaque)s", algorithm="%(algorithm)s"'
+        header_format = 'Digest realm="%(realm)s", qop="%(qop)s",' \
+                        ' nonce="%(nonce)s", opaque="%(opaque)s",' \
+                        ' algorithm="%(algorithm)s"'
         header_values = {
-            'realm' : self.realm,
-            'qop' : self.qop,
+            'realm': self.realm,
+            'qop': self.qop,
             'algorithm': self.algorithm,
             'opaque': self.opaque,
-            'nonce' : nonce}
+            'nonce': nonce}
         header = header_format % header_values
         return header
 
@@ -61,11 +65,12 @@ class DigestAuthentication(BaseAuthentication):
         in the WWW-Authenticate response header
         """
         required_fields = ('username', 'realm', 'nonce', 'uri',
-                           'response','algorithm', 'opaque')
+                           'response', 'algorithm', 'opaque')
 
         for field in required_fields:
             if field not in self.auth_header:
-                raise exceptions.ParseError('Required field %s not found' % field)
+                raise exceptions.ParseError(
+                    'Required field %s not found' % field)
 
         for field in ('opaque', 'algorithm', 'realm', 'qop'):
             if not self.auth_header[field] == getattr(self, field):
@@ -92,7 +97,8 @@ class DigestAuthentication(BaseAuthentication):
     def get_token(self, user):
         try:
             token_inst = self.token_model.objects.get(user=user)
-        except (self.token_model.DoesNotExist, self.token_model.MultipleObjectsReturned):
+        except (self.token_model.DoesNotExist,
+                self.token_model.MultipleObjectsReturned):
             raise exceptions.PermissionDenied
         return token_inst.key
 
@@ -160,7 +166,8 @@ class DigestAuthentication(BaseAuthentication):
         """
         Create HA2 hash
 
-        If the "qop" directive's value is "auth" or is unspecified, then HA2 is:
+        If the "qop" directive's value is "auth" or is unspecified,
+         then HA2 is:
             HA2 = HASH(A2) = HASH(request-method:digest-URI)
         If the qop directive's value is "auth-int", then HA2 is
             HA2 = HASH(A2) = HASH(request-method:digest-URI:MD5(entityBody))
