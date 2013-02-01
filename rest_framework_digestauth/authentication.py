@@ -1,5 +1,7 @@
 import os
 import hashlib
+
+from django.core.signing import Signer
 from rest_framework import exceptions
 from rest_framework.compat import User
 from rest_framework.authentication import BaseAuthentication,\
@@ -21,8 +23,7 @@ class DigestAuthentication(BaseAuthentication):
     algorithm = 'MD5'  # 'MD5'/'SHA'/'MD5-sess'
     # quality of protection
     qop = 'auth'  # 'auth'/'auth-int'/None
-    # TODO: change opaque
-    opaque = 'TESTING'
+    opaque = Signer().sign('DRFOPAQUE')
     token_model = TokenAuthentication.model
 
     def authenticate(self, request):
