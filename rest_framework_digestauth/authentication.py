@@ -90,7 +90,11 @@ class DigestAuthentication(BaseAuthentication):
     def get_user(self):
         username = self.auth_header['username']
         try:
-            user = User.objects.get(username=username)
+            username_field = 'username'
+            if hasattr(User, 'USERNAME_FIELD'):
+                username_field = User.USERNAME_FIELD
+            args = { username_field : username, }
+            user = User.objects.get(**args)
         except (User.DoesNotExist, User.MultipleObjectsReturned):
             raise exceptions.PermissionDenied
         return user
