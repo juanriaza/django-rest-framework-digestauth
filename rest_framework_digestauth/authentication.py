@@ -3,12 +3,13 @@ import hashlib
 
 from django.core.signing import Signer
 from rest_framework import exceptions
-from rest_framework.compat import User
+from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication,\
     TokenAuthentication
 
 from rest_framework_digestauth.utils import parse_dict_header
 
+User = get_user_model()
 
 class DigestAuthentication(BaseAuthentication):
     """
