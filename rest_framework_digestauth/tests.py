@@ -2,7 +2,7 @@ import os
 import time
 import hashlib
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model()
 from django.test import Client, TestCase
 
 from rest_framework.tests.authentication import MockView
@@ -12,6 +12,7 @@ from rest_framework.compat import patterns
 from rest_framework_digestauth.authentication import DigestAuthentication
 from rest_framework_digestauth.utils import parse_dict_header
 
+User = get_user_model()
 
 urlpatterns = patterns(
     '',
