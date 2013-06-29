@@ -13,3 +13,5 @@ INSTALLED_APPS = (
 )
 
 ROOT_URLCONF = 'rest_framework_digestauth.tests'
+
+SECRET_KEY = 'DIGESTAUTH'
