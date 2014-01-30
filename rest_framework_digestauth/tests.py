@@ -84,8 +84,8 @@ class DigestAuthTests(TestCase):
     def test_access(self):
         response = self.csrf_client.post('/digest-auth/',
                                          {'example': 'example'})
-        # self.assertEqual(response.status_code, 401)
-        # self.assertTrue('WWW-Authenticate' in response)
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response)
         auth = build_digest_header('john',
                                    'abcd1234',
                                    response['WWW-Authenticate'],
@@ -95,3 +95,24 @@ class DigestAuthTests(TestCase):
                                          {'example': 'example'},
                                          HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 200)
+
+    def test_replay_attack(self):
+        response = self.csrf_client.post('/digest-auth/',
+                                         {'example': 'example'})
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response)
+
+        auth = build_digest_header('john',
+                                   'abcd1234',
+                                   response['WWW-Authenticate'],
+                                   'POST',
+                                   '/digest-auth/')
+        response = self.csrf_client.post('/digest-auth/',
+                                         {'example': 'example'},
+                                         HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.csrf_client.post('/digest-auth/',
+                                         {'example': 'example'},
+                                         HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 403)
