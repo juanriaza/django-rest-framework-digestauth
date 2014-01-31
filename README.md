@@ -1,7 +1,8 @@
 # Django Rest Framework DigestAuth
 
 [![Build Status](https://travis-ci.org/juanriaza/django-rest-framework-digestauth.png?branch=master)](https://travis-ci.org/juanriaza/django-rest-framework-digestauth)
-
+[![Pypi Package](https://badge.fury.io/py/django-rest-framework-digestauth.png)](http://badge.fury.io/py/django-rest-framework-digestauth)
+[![Downloads](https://pypip.in/d/django-rest-framework-digestauth/badge.png)](https://crate.io/packages/django-rest-framework-digestauth/)
 
 
 ## Overview
