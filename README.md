@@ -14,7 +14,7 @@ Since `django.contrib.auth` only stores a hash of the user's password, this cann
 ## Installation
 
 Install using `pip`, including any optional packages you want...
-	
+
 	$ pip install djangorestframework-digestauth
 
 ...or clone the project from github.
@@ -39,6 +39,12 @@ To run the tests against the current environment:
     $ ./manage.py test rest_framework_digestauth
 
 ## Changelog
+
+### 1.1.0
+
+**31th Jan 2014**
+
+* Added Python 3 support (thanks to @defrex).
 
 ### 1.0.0
 
