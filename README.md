@@ -1,7 +1,8 @@
 # Django Rest Framework DigestAuth
 
 [![Build Status](https://travis-ci.org/juanriaza/django-rest-framework-digestauth.png?branch=master)](https://travis-ci.org/juanriaza/django-rest-framework-digestauth)
-
+[![Pypi Package](https://badge.fury.io/py/djangorestframework-digestauth.png)](http://badge.fury.io/py/djangorestframework-digestauth)
+[![Downloads](https://pypip.in/d/djangorestframework-digestauth/badge.png)](https://crate.io/packages/djangorestframework-digestauth/)
 
 
 ## Overview
@@ -14,7 +15,7 @@ Since `django.contrib.auth` only stores a hash of the user's password, this cann
 ## Installation
 
 Install using `pip`, including any optional packages you want...
-	
+
 	$ pip install djangorestframework-digestauth
 
 ...or clone the project from github.
@@ -39,6 +40,12 @@ To run the tests against the current environment:
     $ ./manage.py test rest_framework_digestauth
 
 ## Changelog
+
+### 1.1.0
+
+**31th Jan 2014**
+
+* Added Python 3 support (thanks to @defrex).
 
 ### 1.0.0
 

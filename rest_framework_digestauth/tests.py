@@ -5,7 +5,7 @@ import hashlib
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
-from rest_framework.tests.authentication import MockView
+from rest_framework.tests.test_authentication import MockView
 from rest_framework.authtoken.models import Token
 from rest_framework.compat import patterns
 

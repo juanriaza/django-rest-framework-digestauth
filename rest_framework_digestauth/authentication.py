@@ -6,6 +6,7 @@ from rest_framework import exceptions
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication,\
     TokenAuthentication
+import six
 
 from rest_framework_digestauth.utils import parse_dict_header
 
@@ -191,4 +192,4 @@ class DigestAuthentication(BaseAuthentication):
 
     def hash_func(self, data):
         alg_hash_func = self.hash_algorithms[self.algorithm]
-        return alg_hash_func(data).hexdigest()
+        return alg_hash_func(six.b(data)).hexdigest()
