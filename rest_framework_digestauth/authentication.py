@@ -94,7 +94,7 @@ class DigestAuthentication(BaseAuthentication):
             username_field = 'username'
             if hasattr(User, 'USERNAME_FIELD'):
                 username_field = User.USERNAME_FIELD
-            args = { username_field : username, }
+            args = {username_field: username}
             user = User.objects.get(**args)
         except (User.DoesNotExist, User.MultipleObjectsReturned):
             raise exceptions.PermissionDenied
