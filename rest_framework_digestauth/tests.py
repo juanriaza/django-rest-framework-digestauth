@@ -11,6 +11,7 @@ from rest_framework.compat import patterns
 
 from rest_framework_digestauth.authentication import DigestAuthentication
 from rest_framework_digestauth.utils import parse_dict_header
+from rest_framework_digestauth.backends import DatabaseBackend
 
 User = get_user_model()
 
@@ -20,7 +21,8 @@ urlpatterns = patterns(
     MockView.as_view(authentication_classes=[DigestAuthentication])))
 
 
-def build_digest_header(username, password, challenge_header, method, path):
+def build_digest_header(username, password, challenge_header, method, path,
+                        nonce_count=1, cnonce=None):
     challenge_data = parse_dict_header(challenge_header.replace('Digest ', ''))
     realm = challenge_data['realm']
     nonce = challenge_data['nonce']
@@ -38,14 +40,15 @@ def build_digest_header(username, password, challenge_header, method, path):
     A1 = '%s:%s:%s' % (username, realm, password)
     A2 = '%s:%s' % (method, path)
 
-    nonce_count = 1
     ncvalue = '%08x' % nonce_count
-    s = str(nonce_count).encode('utf-8')
-    s += nonce.encode('utf-8')
-    s += time.ctime().encode('utf-8')
-    s += os.urandom(8)
 
-    cnonce = (hashlib.sha1(s).hexdigest()[:16])
+    if cnonce is None:
+        seed = str(nonce_count).encode('utf-8')
+        seed += nonce.encode('utf-8')
+        seed += time.ctime().encode('utf-8')
+        seed += os.urandom(8)
+        cnonce = (hashlib.sha1(seed).hexdigest()[:16])
+
     noncebit = "%s:%s:%s:%s:%s" % (nonce, ncvalue, cnonce, qop, hash_utf8(A2))
     respdig = KD(hash_utf8(A1), noncebit)
 
@@ -97,22 +100,50 @@ class DigestAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_replay_attack(self):
-        response = self.csrf_client.post('/digest-auth/',
-                                         {'example': 'example'})
+        response = self.csrf_client.post('/digest-auth/')
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response)
 
-        auth = build_digest_header('john',
-                                   'abcd1234',
-                                   response['WWW-Authenticate'],
-                                   'POST',
-                                   '/digest-auth/')
+        auth_kwargs = {
+            'username': 'john',
+            'password': 'abcd1234',
+            'challenge_header': response['WWW-Authenticate'],
+            'method': 'POST',
+            'path': '/digest-auth/',
+            'cnonce': hashlib.sha1(os.urandom(8)).hexdigest()[:16]
+        }
+        auth = build_digest_header(**auth_kwargs)
+
         response = self.csrf_client.post('/digest-auth/',
-                                         {'example': 'example'},
                                          HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 200)
 
         response = self.csrf_client.post('/digest-auth/',
-                                         {'example': 'example'},
                                          HTTP_AUTHORIZATION=auth)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response)
+
+        for nonce_count in range(2, 4):
+            auth = build_digest_header(nonce_count=nonce_count, **auth_kwargs)
+            response = self.csrf_client.post('/digest-auth/',
+                                             HTTP_AUTHORIZATION=auth)
+            self.assertEqual(response.status_code, 200)
+
+    def test_database_backend(self):
+        backend = DatabaseBackend(self.user)
+        self.assertTrue(backend.get_password())
+
+        server_nonce = hashlib.sha1(os.urandom(8)).hexdigest()[:16]
+        client_nonce = hashlib.sha1(os.urandom(8)).hexdigest()[:16]
+
+        self.assertEqual(backend.get_counter(server_nonce, client_nonce), None)
+
+        backend.set_counter(server_nonce, client_nonce, 1)
+        self.assertEqual(backend.get_counter(server_nonce, client_nonce), 1)
+
+        backend = DatabaseBackend(self.user)
+        backend.set_counter(server_nonce, client_nonce, 4)
+        self.assertEqual(backend.get_counter(server_nonce, client_nonce), 4)
+
+        backend = DatabaseBackend(self.user)
+        self.assertEqual(backend.get_counter(server_nonce, client_nonce), 4)
