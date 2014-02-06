@@ -54,7 +54,7 @@ In order to do this, you should subclass
 `get_counter(server_nonce, client_nonce)` - This should return an integer, which should be equal to the last call to `set_counter` or `None` if there was not previously a counter set.
 
 
-`def set_counter(server_nonce, client_nonce, counter)` - This method should store the counter, to be returned at a later date when `get_counter` is called.
+`set_counter(server_nonce, client_nonce, counter)` - This method should store the counter, to be returned at a later date when `get_counter` is called.
 
 Once you've implimented a new backend, you can use it with the `DIGESTAUTH_BACKEND` setting.
 
