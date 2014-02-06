@@ -38,7 +38,10 @@ class DigestAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         if 'HTTP_AUTHORIZATION' in request.META:
-            self.parse_authorization_header(request.META['HTTP_AUTHORIZATION'])
+            try:
+                self.parse_authorization_header(request.META['HTTP_AUTHORIZATION'])
+            except exceptions.ParseError:
+                return None
             self.check_authorization_request_header()
             user = self.get_user()
             self.backend = DigestBackend(user)
