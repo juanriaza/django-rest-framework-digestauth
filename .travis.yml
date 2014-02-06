@@ -10,5 +10,5 @@ env:
   - DJANGO_VERSION=1.6
 install:
   - pip install -q Django==$DJANGO_VERSION --use-mirrors
-  - pip install -q -r requirements.txt --use-mirrors
+  - pip install .
 script: python manage.py test rest_framework_digestauth
