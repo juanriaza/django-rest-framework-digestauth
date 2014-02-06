@@ -37,7 +37,7 @@ Follow the [docs](http://django-rest-framework.org/api-guide/authentication.html
 ## Customization
 
 By default server-side state (specifically, the client's counter value) is
-stored in the database via the `DigestAuthCounter` model, and the "password"
+stored in the database via the [`DigestAuthCounter`](https://github.com/juanriaza/django-rest-framework-digestauth/blob/master/rest_framework_digestauth/models.py) model, and the "password"
 value is stored via Django Rest Framework's TokenAuthentication backend. Both
 of these things can be changed with a custom backend class. You might want to
 do this if you don't like the performance characteristics of storing this kind
@@ -46,17 +46,19 @@ thing in your default database.
 In order to do this, you should subclass
 [`AbstractDigestBackend`](https://github.com/juanriaza/django-rest-framework-digestauth/blob/master/rest_framework_digestauth/backends.py), which has 3 methods and 1 property.
 
-* `user`
-    This property contains the user instance for the user attempting to authenticate. Please note that this user is not currently authenticated at this point.
+`user` - This property contains the user instance for the user attempting to authenticate. Please note that this user is not currently authenticated at this point.
 
-* `get_password()`
-    This should return a plain text password, or something that can be used in it's place, such as a token. Exactly what is used and how it's generated must be pre-negotiated with all clients.
+`get_password()` - This should return a plain text password, or something that can be used in it's place, such as a token. Exactly what is used and how it's generated must be pre-negotiated with all clients.
 
-* `get_counter(server_nonce, client_nonce)`
-    This should return an integer, which should be equal to the last call to `set_counter` or None if there was not previously a counter set.
 
-* `def set_counter(server_nonce, client_nonce, counter)`
-    This method should store the counter, to be returned at a later date when `get_counter` is called.
+`get_counter(server_nonce, client_nonce)` - This should return an integer, which should be equal to the last call to `set_counter` or `None` if there was not previously a counter set.
+
+
+`def set_counter(server_nonce, client_nonce, counter)` - This method should store the counter, to be returned at a later date when `get_counter` is called.
+
+Once you've implimented a new backend, you can use it with the `DIGESTAUTH_BACKEND` setting.
+
+    DIGESTAUTH_BACKEND = 'myapp.backends.MyDigestBackend'
 
 ## Running the tests
 To run the tests against the current environment:
