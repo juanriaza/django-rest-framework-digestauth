@@ -9,6 +9,7 @@ env:
   - DJANGO_VERSION=1.5
   - DJANGO_VERSION=1.6
 install:
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install --use-mirrors importlib unittest2; fi
   - pip install -q Django==$DJANGO_VERSION --use-mirrors
   - pip install .
 script: python manage.py test rest_framework_digestauth
