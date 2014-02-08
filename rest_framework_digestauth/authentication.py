@@ -6,7 +6,7 @@ from rest_framework import exceptions
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication,\
     TokenAuthentication
-import six
+from django.utils import six
 
 from rest_framework_digestauth.utils import parse_dict_header
 
