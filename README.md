@@ -10,7 +10,7 @@
 This package provides [Digest Access Authentication](http://pretty-rfc.herokuapp.com/RFC2617) support for [Django REST framework](http://django-rest-framework.org/).
 
 HTTP Digest requires the server to be able to calculate a hash over the user's username, password, and your realm.
-Since `django.contrib.auth` only stores a hash of the user's password, this cannot be used to authenticate HTTP Digest sessions. This package authenticates the session against the token provided by [`TokenAuthentication`](http://django-rest-framework.org/api-guide/authentication.html#tokenauthentication).
+Since `django.contrib.auth` only stores a hash of the user's password, this cannot be used to authenticate HTTP Digest sessions. This package authenticates the session against the token provided by [`TokenAuthentication`](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
 ## Installation
 
@@ -26,13 +26,13 @@ Install using `pip`, including any optional packages you want...
 
 ## How to use it?
 
-*Check that [`TokenAuthentication`](http://django-rest-framework.org/api-guide/authentication.html#tokenauthentication) is correctly installed.*
+*Check that [`TokenAuthentication`](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication) is correctly installed.*
 
 This package provides the following authentication scheme:
 
 - `rest_framework_digestauth.authentication.DigestAuthentication`.
 
-Follow the [docs](http://django-rest-framework.org/api-guide/authentication.html#setting-the-authentication-scheme) to set the authentication scheme and you're all done.
+Follow the [docs](http://www.django-rest-framework.org/api-guide/authentication/#setting-the-authentication-scheme) to set the authentication scheme and you're all done.
 
 ## Customization
 
