@@ -13,8 +13,6 @@ from rest_framework import authentication
 from rest_framework_digestauth.utils import parse_dict_header
 
 
-User = get_user_model()
-
 backend_path = getattr(
     settings,
     'DIGESTAUTH_BACKEND',
@@ -104,6 +102,7 @@ class DigestAuthentication(authentication.BaseAuthentication):
                     raise exceptions.ParseError('%s provided without qop' % c)
 
     def get_user(self):
+        User = get_user_model()
         username = self.auth_header['username']
         try:
             username_field = 'username'
