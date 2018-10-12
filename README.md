@@ -63,9 +63,19 @@ Once you've implimented a new backend, you can use it with the `DIGESTAUTH_BACKE
 ## Running the tests
 To run the tests against the current environment:
 
-    $ ./manage.py test rest_framework_digestauth
+    $ pytest test
+    
+The tests with different environments can be run using tox:
+
+    $ tox
 
 ## Changelog
+
+### Unreleased
+
+- Drop support of the django 1.6 or lower
+- Add support of the django 1.8-2.1
+- Switch from *south* to *django* migration system
 
 ### 1.1.0
 
