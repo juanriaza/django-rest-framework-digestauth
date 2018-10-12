@@ -12,6 +12,13 @@ INSTALLED_APPS = (
     'rest_framework_digestauth',
 )
 
-ROOT_URLCONF = 'rest_framework_digestauth.tests'
+MIDDLEWARE = []
+
+ROOT_URLCONF = 'test_app.urls'
 
 SECRET_KEY = 'DIGESTAUTH'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_digestauth.authentication.DigestAuthentication'],
+    "DEFAULT_PERMISSION_CLASSES": ['rest_framework.permissions.IsAuthenticated']
+}

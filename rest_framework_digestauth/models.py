@@ -1,5 +1,6 @@
-
 from django.db import models
+
+__all__ = ['DigestAuthCounter']
 
 
 class DigestAuthCounter(models.Model):

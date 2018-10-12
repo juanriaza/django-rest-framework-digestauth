@@ -1,26 +1,23 @@
 import base64
+import hashlib
 import os
 import time
-import hashlib
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
-
 from rest_framework import HTTP_HEADER_ENCODING
-from rest_framework.tests.test_authentication import MockView
 from rest_framework.authtoken.models import Token
-from rest_framework.compat import patterns
 
-from rest_framework_digestauth.authentication import DigestAuthentication
-from rest_framework_digestauth.utils import parse_dict_header
 from rest_framework_digestauth.backends import DatabaseBackend
+from rest_framework_digestauth.utils import parse_dict_header
+
+try:
+    from django.urls import reverse
+except ImportError:
+    # for django 1.9 or lower
+    from django.core.urlresolvers import reverse
 
 User = get_user_model()
-
-urlpatterns = patterns(
-    '',
-    (r'^digest-auth/$',
-    MockView.as_view(authentication_classes=[DigestAuthentication])))
 
 
 def build_basic_header(username, password):
@@ -43,6 +40,7 @@ def build_digest_header(username, password, challenge_header, method, path,
         if isinstance(x, str):
             x = x.encode('utf-8')
         return hashlib.md5(x).hexdigest()
+
     hash_utf8 = md5_utf8
 
     KD = lambda s, d: hash_utf8("%s:%s" % (s, d))
@@ -62,7 +60,7 @@ def build_digest_header(username, password, challenge_header, method, path,
     noncebit = "%s:%s:%s:%s:%s" % (nonce, ncvalue, cnonce, qop, hash_utf8(A2))
     respdig = KD(hash_utf8(A1), noncebit)
 
-    base = 'username="%s", realm="%s", nonce="%s", uri="%s", '\
+    base = 'username="%s", realm="%s", nonce="%s", uri="%s", ' \
            'response="%s", algorithm="MD5"'
     base = base % (username, realm, nonce, path, respdig)
 
@@ -88,14 +86,16 @@ class DigestAuthTests(TestCase):
         self.key = 'abcd1234'
         self.token = Token.objects.create(key=self.key, user=self.user)
 
+        self.mock_view_url = reverse('digest_auth')
+
     def test_challenge(self):
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          {'example': 'example'})
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response)
 
     def test_access(self):
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          {'example': 'example'})
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response)
@@ -104,13 +104,13 @@ class DigestAuthTests(TestCase):
                                    response['WWW-Authenticate'],
                                    'POST',
                                    '/digest-auth/')
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          {'example': 'example'},
                                          HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 200)
 
     def test_replay_attack(self):
-        response = self.csrf_client.post('/digest-auth/')
+        response = self.csrf_client.post(self.mock_view_url)
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response)
 
@@ -124,18 +124,18 @@ class DigestAuthTests(TestCase):
         }
         auth = build_digest_header(**auth_kwargs)
 
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 200)
 
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response)
 
         for nonce_count in range(2, 4):
             auth = build_digest_header(nonce_count=nonce_count, **auth_kwargs)
-            response = self.csrf_client.post('/digest-auth/',
+            response = self.csrf_client.post(self.mock_view_url,
                                              HTTP_AUTHORIZATION=auth)
             self.assertEqual(response.status_code, 200)
 
@@ -160,10 +160,10 @@ class DigestAuthTests(TestCase):
 
     def test_basic_access(self):
         """Test if a basic access attempt results in another 401."""
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          {'example': 'example'})
         auth = build_basic_header('john', 'abcd1234')
-        response = self.csrf_client.post('/digest-auth/',
+        response = self.csrf_client.post(self.mock_view_url,
                                          {'example': 'example'},
                                          HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 401)

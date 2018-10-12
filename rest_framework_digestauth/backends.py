@@ -1,13 +1,15 @@
-
 from rest_framework import exceptions
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
+
 from rest_framework_digestauth.models import DigestAuthCounter
+
+__all__ = ['AbstractDigestBackend', 'DatabaseBackend']
 
 
 class AbstractDigestBackend(object):
 
     def __init__(self, user):
-        self.user = user # This user is *unauthenticated*, beware.
+        self.user = user  # This user is *unauthenticated*, beware.
 
     def get_password(self):
         """
@@ -35,7 +37,6 @@ class AbstractDigestBackend(object):
 class DatabaseBackend(AbstractDigestBackend):
 
     def get_password(self):
-        Token = TokenAuthentication.model
         try:
             token = Token.objects.get(user=self.user)
         except (Token.DoesNotExist,
