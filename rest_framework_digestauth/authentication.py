@@ -1,26 +1,31 @@
-import os
 import hashlib
+import os
 from importlib import import_module
 
-from django.core.signing import Signer
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.signing import Signer
 from django.utils import six
-
-from rest_framework import exceptions
 from rest_framework import authentication
+from rest_framework import exceptions
 
 from rest_framework_digestauth.utils import parse_dict_header
 
+__all__ = ['DigestAuthentication']
 
-User = get_user_model()
+_User = get_user_model()
 
-backend_path = getattr(
-    settings,
-    'DIGESTAUTH_BACKEND',
-    'rest_framework_digestauth.backends.DatabaseBackend',
-).split('.')
-DigestBackend = getattr(import_module('.'.join(backend_path[:-1])), backend_path[-1])
+
+def _load_backed_class():
+    backend_path = getattr(
+        settings,
+        'DIGESTAUTH_BACKEND',
+        'rest_framework_digestauth.backends.DatabaseBackend',
+    ).split('.')
+    return getattr(import_module('.'.join(backend_path[:-1])), backend_path[-1])
+
+
+_DigestBackend = _load_backed_class()
 
 
 class DigestAuthentication(authentication.BaseAuthentication):
@@ -46,7 +51,7 @@ class DigestAuthentication(authentication.BaseAuthentication):
                 return None
             self.check_authorization_request_header()
             user = self.get_user()
-            self.backend = DigestBackend(user)
+            self.backend = _DigestBackend(user)
             password = self.backend.get_password()
             if self.check_digest_auth(request, password):
                 return user, None
@@ -107,11 +112,11 @@ class DigestAuthentication(authentication.BaseAuthentication):
         username = self.auth_header['username']
         try:
             username_field = 'username'
-            if hasattr(User, 'USERNAME_FIELD'):
-                username_field = User.USERNAME_FIELD
+            if hasattr(_User, 'USERNAME_FIELD'):
+                username_field = _User.USERNAME_FIELD
             args = {username_field: username}
-            user = User.objects.get(**args)
-        except (User.DoesNotExist, User.MultipleObjectsReturned):
+            user = _User.objects.get(**args)
+        except (_User.DoesNotExist, _User.MultipleObjectsReturned):
             raise exceptions.PermissionDenied
         return user
 

@@ -1,18 +1,6 @@
-import sys
+from six.moves.urllib.request import parse_http_list as _parse_list_header
 
-
-_ver = sys.version_info
-
-#: Python 2.x?
-is_py2 = (_ver[0] == 2)
-
-#: Python 3.x?
-is_py3 = (_ver[0] == 3)
-
-if is_py2:
-    from urllib2 import parse_http_list as _parse_list_header
-elif is_py3:
-    from urllib.request import parse_http_list as _parse_list_header  # NOQA
+__all__ = ['parse_dict_header', 'unquote_header_value']
 
 
 # From mitsuhiko/werkzeug (used with permission).
