@@ -1,29 +1,18 @@
 import os
 import hashlib
-from importlib import import_module
 
 from django.core.signing import Signer
-from django.contrib.auth import get_user_model
-from django.conf import settings
-from django.utils import six
-
 from rest_framework import exceptions
-from rest_framework import authentication
+from django.contrib.auth import get_user_model
+from rest_framework.authentication import BaseAuthentication,\
+    TokenAuthentication
+import six
 
 from rest_framework_digestauth.utils import parse_dict_header
 
-
 User = get_user_model()
 
-backend_path = getattr(
-    settings,
-    'DIGESTAUTH_BACKEND',
-    'rest_framework_digestauth.backends.DatabaseBackend',
-).split('.')
-DigestBackend = getattr(import_module('.'.join(backend_path[:-1])), backend_path[-1])
-
-
-class DigestAuthentication(authentication.BaseAuthentication):
+class DigestAuthentication(BaseAuthentication):
     """
     HTTP Digest authentication against username/password.
     Compliant with RFC 2617 (http://tools.ietf.org/html/rfc2617).
@@ -37,17 +26,14 @@ class DigestAuthentication(authentication.BaseAuthentication):
     # quality of protection
     qop = 'auth'  # 'auth'/'auth-int'/None
     opaque = Signer().sign('DRFOPAQUE')
+    token_model = TokenAuthentication.model
 
     def authenticate(self, request):
         if 'HTTP_AUTHORIZATION' in request.META:
-            try:
-                self.parse_authorization_header(request.META['HTTP_AUTHORIZATION'])
-            except exceptions.ParseError:
-                return None
+            self.parse_authorization_header(request.META['HTTP_AUTHORIZATION'])
             self.check_authorization_request_header()
             user = self.get_user()
-            self.backend = DigestBackend(user)
-            password = self.backend.get_password()
+            password = self.get_token(user)
             if self.check_digest_auth(request, password):
                 return user, None
 
@@ -109,30 +95,24 @@ class DigestAuthentication(authentication.BaseAuthentication):
             username_field = 'username'
             if hasattr(User, 'USERNAME_FIELD'):
                 username_field = User.USERNAME_FIELD
-            args = {username_field: username}
+            args = { username_field : username, }
             user = User.objects.get(**args)
         except (User.DoesNotExist, User.MultipleObjectsReturned):
             raise exceptions.PermissionDenied
         return user
 
+    def get_token(self, user):
+        try:
+            token_inst = self.token_model.objects.get(user=user)
+        except (self.token_model.DoesNotExist,
+                self.token_model.MultipleObjectsReturned):
+            raise exceptions.PermissionDenied
+        return token_inst.key
+
     def check_digest_auth(self, request, password):
         """
         Check user authentication using HTTP Digest auth
         """
-        last_counter = self.backend.get_counter(
-            self.auth_header['nonce'],
-            self.auth_header['cnonce'],
-        )
-        current_counter = int(self.auth_header['nc'], 16)
-        if last_counter is not None and not last_counter < current_counter:
-            raise exceptions.AuthenticationFailed
-        else:
-            self.backend.set_counter(
-                self.auth_header['nonce'],
-                self.auth_header['cnonce'],
-                current_counter
-            )
-
         response_hash = self.generate_response(request, password)
         return response_hash == self.auth_header['response']
 

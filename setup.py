@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-
 from setuptools import setup
 import re
 import os
@@ -46,12 +44,6 @@ def get_package_data(package):
 
 package = 'rest_framework_digestauth'
 version = get_version(package)
-install_requires = open('requirements.txt').read().split('\n')
-
-try:
-    import importlib
-except ImportError:
-    install_requires.append('importlib')
 
 
 if sys.argv[-1] == 'publish':
@@ -73,7 +65,7 @@ setup(
     author_email='juanriaza@gmail.com',
     packages=get_packages(package),
     package_data=get_package_data(package),
-    install_requires=install_requires,
+    install_requires=open('requirements.txt').read().split('\n'),
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
