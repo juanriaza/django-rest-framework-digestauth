@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "django-rest-framework-digestauth"
+version = "0.1.0"
+description = ""
+authors = ["James Darabi <james.darabi@ginger.io>"]
+readme = "README.md"
+packages = [{include = "rest_framework_digestauth"}]
+
+[tool.poetry.dependencies]
+python = "3.7.16"
+
+django = "1.11.29"
+djangorestframework = "3.11.2"
+six = "1.16.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
