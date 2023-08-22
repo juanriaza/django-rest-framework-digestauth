@@ -1,5 +1,11 @@
 # Django Rest Framework DigestAuth
 
+**NOTE: This repo is now deprecated for Headspace.**
+
+The module `rest_framework_digestauth` is now located in the repo **ginger-django-commons** here:
+[rest_framework_digestauth](https://github.com/HeadspaceMeditation/ginger-django-commons/tree/main/rest_framework_digestauth)
+
+
 [![Build Status](https://travis-ci.org/juanriaza/django-rest-framework-digestauth.png?branch=master)](https://travis-ci.org/juanriaza/django-rest-framework-digestauth)
 
 
